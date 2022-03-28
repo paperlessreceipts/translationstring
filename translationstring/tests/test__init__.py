@@ -128,6 +128,27 @@ class TestTranslationString(unittest.TestCase):
         self.assertEqual(result,
                          (u('msgid'), 'domain', u('default'), 'mapping', None))
 
+
+class TestTranslationStringSubclass(TestTranslationString):
+
+    def setUp(self):
+        from translationstring import TranslationString
+
+        class TranslationStringSubclass(TranslationString):
+            pass
+
+        self.target_class = TranslationStringSubclass
+
+    def _getTargetClass(self):
+        return self.target_class
+
+    def test_format_type(self):
+        inst = self._makeOne('msgid', domain='domain', default='default')
+        mapping = {'foo': 'bar'}
+        new_inst = inst % mapping
+        self.assertIsInstance(new_inst, self._getTargetClass())
+
+
 class TestTranslationStringFactory(unittest.TestCase):
 
     def _makeOne(self, domain):
@@ -178,6 +199,20 @@ class TestTranslationStringFactory(unittest.TestCase):
         self.assertEqual(str(wrapper_inst), 'wrapped_msgid: ${a} ${b} ${c}')
         # it must be present when wrapped
         self.assertEqual(wrapper_inst.mapping, {'a': 1, 'b': 2, 'c': 2})
+
+    def test_explicit_translation_string_class(self):
+        from translationstring import TranslationString
+        from translationstring import TranslationStringFactory
+
+        class TranslationStringSubclass(TranslationString):
+            pass
+
+        factory = TranslationStringFactory(
+            'domain',  cls=TranslationStringSubclass)
+
+        inst = factory('msgid')
+        self.assertEqual(inst, 'msgid')
+        self.assertIsInstance(inst, TranslationStringSubclass)
 
 
 class TestChameleonTranslate(unittest.TestCase):
@@ -287,6 +322,31 @@ class TestTranslator(unittest.TestCase):
         result = inst(tstring)
         self.assertEqual(result, 'msgid-translated')
 
+    def test_translates_and_interpolates_subclass(self):
+        from translationstring import TranslationString
+
+        class TranslationStringSubclass(TranslationString):
+            def interpolate(self, translated=None):
+                return self.format(**self.mapping)
+
+        tstring = TranslationStringSubclass('{a}')
+        inst = self._makeOne(None)
+        result = inst(tstring, mapping={'a': 1})
+        self.assertEqual(result, '1')
+
+    def test_translator_cls(self):
+        from translationstring import TranslationString
+        from translationstring import Translator
+
+        class TranslationStringSubclass(TranslationString):
+            def interpolate(self, translated=None):
+                return self.format(**self.mapping)
+
+        inst = Translator(cls=TranslationStringSubclass)
+        result = inst('{a}', mapping={'a': 1})
+        self.assertEqual(result, '1')
+
+
 class TestPluralizer(unittest.TestCase):
     def _makeOne(self, translations=None, policy=None):
         from translationstring import Pluralizer
@@ -310,6 +370,43 @@ class TestPluralizer(unittest.TestCase):
         tstring = DummyTranslationString('msgid')
         result = inst(tstring, tstring, 1)
         self.assertEqual(result, 'msgid-msgid-translated')
+
+    def test_subclass_interpolation_singular(self):
+        from translationstring import TranslationString
+
+        class TranslationStringSubclass(TranslationString):
+            def interpolate(self, translated=None):
+                return self.format(**self.mapping)
+
+        inst = self._makeOne()
+        result = inst(TranslationStringSubclass('{a}'),
+                      TranslationString('2'), 1, mapping={'a': 1})
+        self.assertEqual(result, '1')
+
+    def test_subclass_interpolation_plural(self):
+        from translationstring import TranslationString
+
+        class TranslationStringSubclass(TranslationString):
+            def interpolate(self, translated=None):
+                return self.format(**self.mapping)
+
+        inst = self._makeOne()
+        result = inst(TranslationString('1'),
+                      TranslationStringSubclass('{b}'), 2, mapping={'b': 2})
+        self.assertEqual(result, '2')
+
+    def test_pluralizer_cls(self):
+        from translationstring import Pluralizer
+        from translationstring import TranslationString
+
+        class TranslationStringSubclass(TranslationString):
+            def interpolate(self, translated=None):
+                return self.format(**self.mapping)
+
+        inst = Pluralizer(cls=TranslationStringSubclass)
+        result = inst('{a}', '2', 1, mapping={'a': 1})
+        self.assertEqual(result, '1')
+
 
 class Test_ugettext_policy(unittest.TestCase):
 
