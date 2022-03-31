@@ -209,7 +209,7 @@ class TestChameleonTranslate(unittest.TestCase):
         msgid = DummyTranslationString('abc')
         translate = self._makeOne(None)
         result = translate(msgid)
-        self.assertEqual(result, 'interpolated')
+        self.assertEqual(result, 'abc-interpolated')
 
     def test_msgid_text_type_translator_is_None(self):
         msgid = u('foo')
@@ -244,7 +244,7 @@ class TestTranslator(unittest.TestCase):
         inst = self._makeOne()
         tstring = DummyTranslationString('$abc', mapping=True)
         result = inst(tstring)
-        self.assertEqual(result, 'interpolated')
+        self.assertEqual(result, '$abc-interpolated')
 
     def test_translations_None_interpolation_not_required(self):
         inst = self._makeOne()
@@ -282,10 +282,10 @@ class TestTranslator(unittest.TestCase):
     def test_policy_returns_translation(self):
         tstring = DummyTranslationString('msgid')
         def policy(translations, msg, domain, context):
-            return 'translated'
+            return msg + '-translated'
         inst = self._makeOne('ignoreme', policy)
         result = inst(tstring)
-        self.assertEqual(result, 'translated')
+        self.assertEqual(result, 'msgid-translated')
 
 class TestPluralizer(unittest.TestCase):
     def _makeOne(self, translations=None, policy=None):
@@ -305,11 +305,11 @@ class TestPluralizer(unittest.TestCase):
     def test_policy_returns_translated(self):
         translations = DummyTranslations('result')
         def policy(translations, singular, plural, n, domain, context):
-            return 'translated'
+            return singular + '-' + plural + '-translated'
         inst = self._makeOne(translations, policy)
         tstring = DummyTranslationString('msgid')
         result = inst(tstring, tstring, 1)
-        self.assertEqual(result, 'translated')
+        self.assertEqual(result, 'msgid-msgid-translated')
 
 class Test_ugettext_policy(unittest.TestCase):
 
@@ -505,4 +505,4 @@ class DummyTranslationString(text_type):
         return self
 
     def interpolate(self, translated=None):
-        return 'interpolated'
+        return (translated or self) + '-interpolated'
