@@ -281,11 +281,11 @@ class TestTranslator(unittest.TestCase):
         result = inst(tstring)
         self.assertEqual(result, '$abc-interpolated')
 
-    def test_translations_None_interpolation_not_required(self):
+    def test_translations_None_interpolation(self):
         inst = self._makeOne()
         tstring = DummyTranslationString('msgid', mapping=False)
         result = inst(tstring)
-        self.assertEqual(result, 'msgid')
+        self.assertEqual(result, 'msgid-interpolated')
 
     def test_translate_normal_string_with_domain(self):
         translations = DummyTranslations('yo')
@@ -312,7 +312,7 @@ class TestTranslator(unittest.TestCase):
             return msg
         inst = self._makeOne('ignoreme', policy)
         result = inst(tstring)
-        self.assertEqual(result, 'default')
+        self.assertEqual(result, 'default-interpolated')
 
     def test_policy_returns_translation(self):
         tstring = DummyTranslationString('msgid')
@@ -320,7 +320,7 @@ class TestTranslator(unittest.TestCase):
             return msg + '-translated'
         inst = self._makeOne('ignoreme', policy)
         result = inst(tstring)
-        self.assertEqual(result, 'msgid-translated')
+        self.assertEqual(result, 'msgid-translated-interpolated')
 
     def test_translates_and_interpolates_subclass(self):
         from translationstring import TranslationString
@@ -369,7 +369,7 @@ class TestPluralizer(unittest.TestCase):
         inst = self._makeOne(translations, policy)
         tstring = DummyTranslationString('msgid')
         result = inst(tstring, tstring, 1)
-        self.assertEqual(result, 'msgid-msgid-translated')
+        self.assertEqual(result, 'msgid-msgid-translated-interpolated')
 
     def test_subclass_interpolation_singular(self):
         from translationstring import TranslationString

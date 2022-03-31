@@ -330,7 +330,7 @@ def Translator(translations=None, policy=None, cls=TranslationString):
             translated = policy(translations, tstring, domain, context)
         if translated == tstring:
             translated = tstring.default
-        if translated and tstring.mapping:
+        if translated:
             translated = tstring.interpolate(translated)
         return translated
     return translator
@@ -424,7 +424,7 @@ def Pluralizer(translations=None, policy=None, cls=TranslationString):
             type_ = type(plural)
         if not hasattr(type_, 'interpolate'):
             type_ = cls
-        if translated and mapping:
+        if translated:
             return type_(text_type(translated), mapping=mapping).interpolate()
         return translated
     return pluralizer
