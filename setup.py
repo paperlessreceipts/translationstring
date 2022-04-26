@@ -20,7 +20,7 @@ docs_extras = [
 
 setup(
     name='translationstring',
-    version='1.4dev',
+    version='1.4+ereceipts.20220331',
     description=('Utility library for i18n relied on by various Repoze '
                'and Pyramid packages'),
     long_description=README + '\n\n' +  CHANGES,
